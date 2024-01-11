@@ -41,7 +41,8 @@ app.get('/stream/:token/:videoId', async (req, res) => {
         objVideoInfo = response1.data;
         // console.log('Get isplay '+objVideoInfo.isPlay);
 
-        isPlay = objVideoInfo?objVideoInfo.isPlay:0;
+        // isPlay = objVideoInfo?objVideoInfo.isPlay:0;
+        isPlay = objVideoInfo.isPlay;
         if (isPlay == 0) {
             let obj = {
                 isPlay: 1
