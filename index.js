@@ -50,7 +50,7 @@ app.get("/stream/:token/:topicId", async (req, res, next) => {
     // console.log(info);
     if (
       (isPlay == 0 && (range == undefined || range == "bytes=0-")) ||
-      (isPlay == 1 && range != undefined)
+      (isPlay == 1 && range == undefined)
     ) {
        // if ((isPlay == 0 && range == "bytes=0-") || (isPlay == 1 && (range != "bytes=0-" &&  range != undefined))) {
       // console.log(videoData.videoUrl);
