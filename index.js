@@ -119,7 +119,7 @@ app.get("/stream/:token/:topicId", async (req, res, next) => {
 });
 async function getVideoUrl(id) {
   const response = await axios.get(
-    "https://localhost:44355/api/sahosoft/Course_PaidVideocourses_CourseChapterTopic/GetUrlById/" +
+    "https://sahosofttech.live/api/sahosoft/Course_PaidVideocourses_CourseChapterTopic/GetUrlById/" +
       id
   );
   if (response.data.isSuccess) {
