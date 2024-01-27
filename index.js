@@ -54,13 +54,14 @@ app.get("/stream/:token/:topicId", async (req, res, next) => {
       //  if ((isPlay == 0 && range == "bytes=0-") || (isPlay == 1 && (range != "bytes=0-" &&  range != undefined))) {
       // console.log(videoData.videoUrl);
       let videoURL = "";
+          console.log(videoData);
+      console.log(videoData.videoUrl);
       if(req.params.topicId == 10001){
         videoURL = "https://www.youtube.com/watch?v=hAP2QF--2Dg";
       }else{
         videoURL = "https://www.youtube.com/watch?v=" +  videoData.videoUrl;
       }
-      console.log(videoData);
-      console.log(videoData.videoUrl);
+  
      
       // "https://www.youtube.com/watch?v=" + 'lhBCQkSR7NU';
       const videoInfo = await ytdl.getInfo(videoURL);
