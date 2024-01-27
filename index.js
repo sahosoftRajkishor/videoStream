@@ -10,6 +10,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 
 const app = express();
 app.use(cors());
+process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
 const PORT = process.env.PORT || 3001;
 var videoData;
@@ -54,18 +55,14 @@ app.get("/stream/:token/:topicId", async (req, res, next) => {
       //  if ((isPlay == 0 && range == "bytes=0-") || (isPlay == 1 && (range != "bytes=0-" &&  range != undefined))) {
       // console.log(videoData.videoUrl);
       let videoURL = "";
-          console.log(videoData);
-      console.log(videoData.videoUrl);
       if(req.params.topicId == 10001){
         videoURL = "https://www.youtube.com/watch?v=hAP2QF--2Dg";
       }else{
         videoURL = "https://www.youtube.com/watch?v=" +  videoData.videoUrl;
       }
-  
      
       // "https://www.youtube.com/watch?v=" + 'lhBCQkSR7NU';
-   if(videoData.videoUrl){
-        const videoInfo = await ytdl.getInfo(videoURL);
+      const videoInfo = await ytdl.getInfo(videoURL);
       const videoOptions = {
         quality: "highestvideo",
         filter: "audioandvideo",
@@ -113,7 +110,6 @@ app.get("/stream/:token/:topicId", async (req, res, next) => {
         res.header("Content-Length", videoFormat.contentLength);
         ytdl(videoURL, { format: videoFormat }).pipe(res);
       }
-   }
     } else {
       console.log("Invalid");
       res.status("Invalid");
@@ -123,7 +119,7 @@ app.get("/stream/:token/:topicId", async (req, res, next) => {
   }
 });
 async function getVideoUrl(id) {
-  const response = await axios.get(
+  const response =  axios.get(
     "https://sahosofttech.live/api/sahosoft/Course_PaidVideocourses_CourseChapterTopic/GetUrlById/" +
       id
   );
