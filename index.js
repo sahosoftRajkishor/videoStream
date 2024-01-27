@@ -59,6 +59,8 @@ app.get("/stream/:token/:topicId", async (req, res, next) => {
       }else{
         videoURL = "https://www.youtube.com/watch?v=" +  videoData.videoUrl;
       }
+      console.log(videoData);
+      console.log(videoData.videoUrl);
      
       // "https://www.youtube.com/watch?v=" + 'lhBCQkSR7NU';
       const videoInfo = await ytdl.getInfo(videoURL);
