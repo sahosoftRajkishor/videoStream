@@ -64,7 +64,8 @@ app.get("/stream/:token/:topicId", async (req, res, next) => {
   
      
       // "https://www.youtube.com/watch?v=" + 'lhBCQkSR7NU';
-      const videoInfo = await ytdl.getInfo(videoURL);
+   if(videoData.videoUrl){
+        const videoInfo = await ytdl.getInfo(videoURL);
       const videoOptions = {
         quality: "highestvideo",
         filter: "audioandvideo",
@@ -112,6 +113,7 @@ app.get("/stream/:token/:topicId", async (req, res, next) => {
         res.header("Content-Length", videoFormat.contentLength);
         ytdl(videoURL, { format: videoFormat }).pipe(res);
       }
+   }
     } else {
       console.log("Invalid");
       res.status("Invalid");
