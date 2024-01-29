@@ -74,7 +74,7 @@ app.get("/stream/:token/:topicId", async (req, res) => {
       const info = await ytdl.getInfo(videoURL);
 
       const format = await ytdl.chooseFormat(info.formats, {
-        // quality: "highestvideo",
+        quality: "highestvideo",
         filter: "audioandvideo",
       });
       let getSize = info.formats.filter(
