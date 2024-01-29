@@ -19,7 +19,7 @@ app.get("/stream/:token/:topicId", async (req, res) => {
   let isPlay = 0;
   let objVideoInfo;
   let objInfoUpdate;
-  if (req.params.topicId != 10001) getVideoUrl(req.params.topicId);
+  // if (req.params.topicId != 10001) getVideoUrl(req.params.topicId);
   try {
     // First API call
 
@@ -50,7 +50,17 @@ app.get("/stream/:token/:topicId", async (req, res) => {
     ) {
       //  if ((isPlay == 0 && range == "bytes=0-") || (isPlay == 1 && (range != "bytes=0-" &&  range != undefined))) {
       // console.log(videoData.videoUrl);
+      if (req.params.topicId != 10001) {
+          const response = await axios.get(
+    "https://sahosofttech.live/api/sahosoft/Course_PaidVideocourses_CourseChapterTopic/GetUrlById/" +
+      id
+  );
+         if (response.data.isSuccess) {
+    videoData = response.data.data;
+  }
+      }
 
+ 
       let videoURL = "";
       if (req.params.topicId == 10001) {
         videoURL = "https://www.youtube.com/watch?v=oNx3p9U1xC8";
