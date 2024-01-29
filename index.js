@@ -10,18 +10,12 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 
 const app = express();
 app.use(cors());
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET , PUT , POST , DELETE");
-    res.header("Access-Control-Allow-Headers", "Content-Type, x-requested-with");
-    next(); // Important
-})
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
 const PORT = process.env.PORT || 3001;
 var videoData;
 
-app.get("/stream/:token/:topicId", async (req, res, next) => {
+app.get("/stream/:token/:topicId", async (req, res) => {
   let isPlay = 0;
   let objVideoInfo;
   let objInfoUpdate;
@@ -47,74 +41,69 @@ app.get("/stream/:token/:topicId", async (req, res, next) => {
         obj
       );
       objInfoUpdate = response2.data;
-      console.log(objInfoUpdate);
+      // console.log(objInfoUpdate);
     }
     const range = req.headers.range;
-    console.log(isPlay);
-    console.log(range);
-    // let info = await ytdl.getInfo(resData.videoUrl);
-    // console.log(info);
     if (
       (isPlay == 0 && (range == undefined || range == "bytes=0-")) ||
-      (isPlay == 1 && range == undefined)
+      (isPlay == 1 && range != undefined)
     ) {
-       // if ((isPlay == 0 && range == "bytes=0-") || (isPlay == 1 && (range != "bytes=0-" &&  range != undefined))) {
+      //  if ((isPlay == 0 && range == "bytes=0-") || (isPlay == 1 && (range != "bytes=0-" &&  range != undefined))) {
       // console.log(videoData.videoUrl);
+
       let videoURL = "";
-      if(req.params.topicId == 10001){
-        videoURL = "https://www.youtube.com/watch?v=hAP2QF--2Dg";
-      }else{
-        videoURL = "https://www.youtube.com/watch?v=" +  videoData.videoUrl;
-      }
-     
-      // "https://www.youtube.com/watch?v=" + 'lhBCQkSR7NU';
-      const videoInfo = await ytdl.getInfo(videoURL);
-      const videoOptions = {
-        quality: "highestvideo",
-        filter: "audioandvideo",
-      };
-      const videoFormat = ytdl.chooseFormat(videoInfo.formats, videoOptions);
-
-      // Check if the client supports partial content (range requests)
-      const range = req.headers.range;
-      if (range) {
-        console.log(videoFormat.contentLength);
-        const ranges = rangeParser(videoFormat.contentLength, range);
-
-        // Check if the requested range is valid
-        if (ranges === -1) {
-          res.status(416).end("Requested range not satisfiable");
-          return;
-        }
-
-        const { start, end } = ranges[0];
-
-        // Set the appropriate headers for partial content
-        res
-          .status(206)
-          .set(
-            "Content-Range",
-            `bytes ${start}-${end}/${videoFormat.contentLength}`
-          )
-          .set("Content-Length", end - start + 1);
-
-        // Create a readable stream with the specified range
-        const stream = ytdl(videoURL, { format: videoFormat }).pipe(res, {
-          end: true,
-        });
-
-        stream.on("end", () => {
-          console.log("Streaming finished");
-        });
-
-        stream.on("error", (err) => {
-          console.error("Error streaming video:", err);
-        });
+      if (req.params.topicId == 10001) {
+        videoURL = "https://www.youtube.com/watch?v=oNx3p9U1xC8";
       } else {
-        console.log(videoFormat.contentLength);
-        // If no range is specified, stream the entire video
-        res.header("Content-Length", videoFormat.contentLength);
-        ytdl(videoURL, { format: videoFormat }).pipe(res);
+        videoURL = "https://www.youtube.com/watch?v=" + videoData.videoUrl;
+      }
+
+      if (!videoURL) {
+        return res.status(400).send("Video URL is required.");
+      }
+      const info = await ytdl.getInfo(videoURL);
+
+      const format = await ytdl.chooseFormat(info.formats, {
+        // quality: "highestvideo",
+        filter: "audioandvideo",
+      });
+      let getSize = info.formats.filter(
+        (x) => x.contentLength && x.quality == format.quality
+      );
+      console.log(range);
+      console.log(getSize[0].contentLength);
+      const fileSize = getSize[0].contentLength;
+      // const fileSize = format.contentLength;
+      console.log(fileSize);
+      if (range) {
+        const chunkSize = 10 ** 6; // 1MB chunk size
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        // const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+        const end = Math.min(start + chunkSize, fileSize - 1);
+        const contentLength = end - start + 1;
+
+        const headers = {
+          "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+          "Accept-Ranges": "bytes",
+          "Content-Length": contentLength,
+          "Content-Type": "video/mp4",
+        };
+
+        res.writeHead(206, headers);
+        ytdl(videoURL, {
+          quality: "highestvideo",
+          filter: "audioandvideo",
+          range: { start, end },
+        }).pipe(res);
+      } else {
+        const headers = {
+          "Content-Length": fileSize,
+          "Content-Type": "video/mp4",
+        };
+
+        res.writeHead(200, headers);
+        ytdl(videoURL, { format: format }).pipe(res);
       }
     } else {
       console.log("Invalid");
@@ -125,15 +114,12 @@ app.get("/stream/:token/:topicId", async (req, res, next) => {
   }
 });
 async function getVideoUrl(id) {
-  const response =  axios.get(
+  const response = await axios.get(
     "https://sahosofttech.live/api/sahosoft/Course_PaidVideocourses_CourseChapterTopic/GetUrlById/" +
       id
   );
   if (response.data.isSuccess) {
     videoData = response.data.data;
-    return (req, res, next) => {
-      next();
-    };
   }
 }
 function verifyToken(token) {
