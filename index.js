@@ -108,7 +108,7 @@ app.get("/stream/:token/:topicId", async (req, res) => {
         }).pipe(res);
       } else {
         const headers = {
-          "Content-Length": fileSize,
+          // "Content-Length": fileSize,
           "Content-Type": "video/mp4",
         };
 
