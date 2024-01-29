@@ -53,7 +53,7 @@ app.get("/stream/:token/:topicId", async (req, res) => {
       if (req.params.topicId != 10001) {
           const response = await axios.get(
     "https://sahosofttech.live/api/sahosoft/Course_PaidVideocourses_CourseChapterTopic/GetUrlById/" +
-      id
+      req.params.topicId
   );
          if (response.data.isSuccess) {
     videoData = response.data.data;
