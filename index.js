@@ -14,12 +14,20 @@ process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
 const PORT = process.env.PORT || 3001;
 var videoData;
+app.use((req, res, next) => {
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, private"
+  );
+  next();
+});
 
 app.get("/stream/:token/:topicId", async (req, res) => {
   let isPlay = 0;
   let objVideoInfo;
   let objInfoUpdate;
-  // if (req.params.topicId != 10001) getVideoUrl(req.params.topicId);
+  let isValid = true;
+  if (req.params.topicId != 10001) getVideoUrl(req.params.topicId);
   try {
     // First API call
 
@@ -44,23 +52,26 @@ app.get("/stream/:token/:topicId", async (req, res) => {
       // console.log(objInfoUpdate);
     }
     const range = req.headers.range;
-    if (
-      (isPlay == 0 && (range == undefined || range == "bytes=0-")) ||
-      (isPlay == 1 && range != undefined)
+    console.log(range);
+    console.log(isPlay);
+    let otherparts;
+    if(range){
+      otherparts = range.replace(/bytes=/, "").split("-");
+    }
+    
+
+    if ((isPlay == 0 && (range == undefined || range == "bytes=0-")) 
+    || 
+     (isPlay == 1 && range != undefined) 
+     &&
+     (isPlay == 1 && (range != "bytes=0-" ))  
+      
     ) {
+      // if (((isPlay == 0 && (range == undefined || range == "bytes=0-")) || (isPlay == 1 && range != undefined ) )
+      // ) {
       //  if ((isPlay == 0 && range == "bytes=0-") || (isPlay == 1 && (range != "bytes=0-" &&  range != undefined))) {
       // console.log(videoData.videoUrl);
-      if (req.params.topicId != 10001) {
-          const response = await axios.get(
-    "https://sahosofttech.live/api/sahosoft/Course_PaidVideocourses_CourseChapterTopic/GetUrlById/" +
-      req.params.topicId
-  );
-         if (response.data.isSuccess) {
-    videoData = response.data.data;
-  }
-      }
 
- 
       let videoURL = "";
       if (req.params.topicId == 10001) {
         videoURL = "https://www.youtube.com/watch?v=oNx3p9U1xC8";
@@ -77,11 +88,14 @@ app.get("/stream/:token/:topicId", async (req, res) => {
         quality: "highestvideo",
         filter: "audioandvideo",
       });
+      // let getSize = info.formats.filter(
+      //   (x) => x.contentLength && x.quality == format.quality
+      // );
       let getSize = info.formats.filter(
-        (x) => x.contentLength && x.quality == format.quality
+        (x) => x.contentLength && x.hasAudio
       );
-      console.log(range);
-      console.log(getSize[0].contentLength);
+      // console.log(range);
+      // console.log(getSize[0].contentLength);
       const fileSize = getSize[0].contentLength;
       // const fileSize = format.contentLength;
       console.log(fileSize);
@@ -98,6 +112,7 @@ app.get("/stream/:token/:topicId", async (req, res) => {
           "Accept-Ranges": "bytes",
           "Content-Length": contentLength,
           "Content-Type": "video/mp4",
+          "Cache-Control": "no-store, no-cache, must-revalidate, private",
         };
 
         res.writeHead(206, headers);
@@ -107,17 +122,21 @@ app.get("/stream/:token/:topicId", async (req, res) => {
           range: { start, end },
         }).pipe(res);
       } else {
+        // console.log('content len: ',format.contentLength);
         const headers = {
-          // "Content-Length": fileSize,
+          // "Content-Length": format.contentLength,
           "Content-Type": "video/mp4",
         };
 
-        res.writeHead(200, headers);
+        // res.writeHead(200, headers);
         ytdl(videoURL, { format: format }).pipe(res);
       }
     } else {
-      console.log("Invalid");
-      res.status("Invalid");
+      isValid = false;
+      console.log("Downloading Faild! Some one trying to download the video.");
+      // res.status("Video download not allowed");
+      res.status(403).end('Video download not allowed');
+      // return;
     }
   } catch (error) {
     console.error("Error in nested API calls:", error.message);
