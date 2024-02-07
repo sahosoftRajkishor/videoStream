@@ -88,23 +88,18 @@ app.get("/stream/:token/:topicId", async (req, res) => {
         quality: "highestvideo",
         filter: "audioandvideo",
       });
-      // let getSize = info.formats.filter(
-      //   (x) => x.contentLength && x.quality == format.quality
-      // );
-      let getSize = info.formats.filter(
-        (x) => x.contentLength && x.hasAudio
-      );
-      // console.log(range);
-      // console.log(getSize[0].contentLength);
-      const fileSize = getSize[0].contentLength;
-      // const fileSize = format.contentLength;
+          const headResponse = await axios.head(format.url);
+      const contentLength = parseInt(headResponse.headers["content-length"]);
+      fileSize = contentLength;
+
+
       console.log(fileSize);
       if (range) {
         const chunkSize = 10 ** 6; // 1MB chunk size
         const parts = range.replace(/bytes=/, "").split("-");
         const start = parseInt(parts[0], 10);
-        // const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-        const end = Math.min(start + chunkSize, fileSize - 1);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+        // const end = Math.min(start + chunkSize, fileSize - 1);
         const contentLength = end - start + 1;
 
         const headers = {
